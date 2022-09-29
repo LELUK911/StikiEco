@@ -1,0 +1,149 @@
+function attakNftForMortalKombat(uint256 _tokenId, uint256 _indexMortalList)
+public
+{
+// 1 depositiamo nela lista l'nft che attacca
+uint256 attID = _depStikiForMortalKombat(msg.sender, _tokenId);
+
+// prendiamo i dati dell'attaccante
+Player memory NftAtt = Player(
+    _tokenId,
+    stikies[_tokenId].lifepoint,
+    stikies[_tokenId].power,
+    stikies[_tokenId].dex,
+    stikies[_tokenId].stamina,
+    stikies[_tokenId].speed
+);
+Player memory NftDif = Player(
+    mortalList[_indexMortalList].stikiID,
+    stikies[mortalList[_indexMortalList].stikiID].lifepoint,
+    stikies[mortalList[_indexMortalList].stikiID].power,
+    stikies[mortalList[_indexMortalList].stikiID].dex,
+    stikies[mortalList[_indexMortalList].stikiID].stamina,
+    stikies[mortalList[_indexMortalList].stikiID].speed
+);
+NftAtt.stamina = 0;
+
+mortalList[attID].status = StatusNft(2);
+_burn(NftAtt.IdToken);
+}
+
+
+
+
+
+
+
+
+
+
+        uint256 stikiIdDefens = mortalList[_indexMortalList].stikiID;
+
+        Player memory player1 = Player(
+            _tokenId,
+            stikies[_tokenId].lifepoint,
+            stikies[_tokenId].power,
+            stikies[_tokenId].dex,
+            stikies[_tokenId].stamina,
+            stikies[_tokenId].speed
+        );
+        Player memory player2 = Player(
+            stikiIdDefens,
+            stikies[stikiIdDefens].lifepoint,
+            stikies[stikiIdDefens].power,
+            stikies[stikiIdDefens].dex,
+            stikies[stikiIdDefens].stamina,
+            stikies[stikiIdDefens].speed
+        );
+        
+        for (; player1.stamina >= 1; ) {
+            // reduct Stamina sistem
+
+            if (player1.speed + 3 <= player2.speed) {
+                if (player1.stamina < 3) {
+                    player1.stamina = 0;
+                } else {
+                    player1.stamina -= 3;
+                }
+            } else if (player1.stamina >= player2.speed + 3) {
+                player1.stamina -= 1;
+            } else {
+                player1.stamina -= 2;
+            }
+
+            player1.stamina -= 1;
+            // reduct LifePoint sistem
+
+            if (player1.power > player2.power) {
+                uint256 damage;
+                if (player1.dex + 2 <= player2.dex) {
+                    // forse meglio gli integer ?
+                    damage = player1.power - player2.power + 2;
+                } else if (player1.dex * 2 <= player2.dex) {
+                    // forse meglio gli integer ?
+                    if (player1.power - player2.power * 2 <= 0) {
+                        player1.stamina = 0;
+                    } else {
+                        damage = player1.power - player2.power * 2;
+                    }
+                } else if (player1.dex >= player2.dex * 2) {
+                    damage = (player1.power - player2.power) * 2;
+                }
+                player2.lifepoint -= damage;
+            } else {
+                uint256 damage = 1;
+                if (player1.dex + 2 <= player2.dex) {
+                    // forse meglio gli integer ?
+                    player1.stamina = 0;
+                } else if (player1.dex >= player2.dex * 2) {
+                    damage *= 2;
+                }
+                player2.lifepoint -= damage;
+            }
+
+            uint256 damage = player1.power - player2.power;
+            player2.lifepoint = 0;
+            
+            if (player2.lifepoint > damage) {
+                player2.lifepoint = 0;
+            } else {
+                player2.lifepoint = 0;
+            }
+
+            if (player2.lifepoint == 0) {
+                // uccidiamo il perdente
+                mortalList[_indexMortalList].status = StatusNft(2);
+                // premiamo il vincente
+                stikies[player1.IdToken].poinStat += 3;
+                stikies[player1.IdToken].level += 1;
+                stikies[player1.IdToken].power += 1;
+                stikies[player1.IdToken].dex += 1;
+                stikies[player1.IdToken].stamina += 1;
+                stikies[player1.IdToken].speed += 1;
+                break;
+            }
+        }
+        
+       
+        if (player2.lifepoint == 0) {
+            // uccidiamo il perdente
+            mortalList[_indexMortalList].status = StatusNft.DIE;
+            // premiamo il vincente
+            stikies[player1.IdToken].poinStat += 3;
+            stikies[player1.IdToken].level += 1;
+            stikies[player1.IdToken].power += 1;
+            stikies[player1.IdToken].dex += 1;
+            stikies[player1.IdToken].stamina += 1;
+            stikies[player1.IdToken].speed += 1;
+        }
+
+        if (mortalList[_indexMortalList].status == StatusNft.DIE) {
+            // 2 = morto
+            _approve(address(this), mortalList[_indexMortalList].stikiID);
+            _burn(mortalList[_indexMortalList].stikiID);
+        } else {
+            mortalList[IdAttaker].status = StatusNft.DIE;
+            _approve(address(this), mortalList[IdAttaker].stikiID);
+            _burn(mortalList[IdAttaker].stikiID);
+        }
+
+        // decisione battaglia
